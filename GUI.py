@@ -1,5 +1,5 @@
 import sys
-
+import  matplotlib
 from PyQt5.uic.properties import QtCore
 from scipy.stats import pearsonr
 import statistics as st
@@ -12,7 +12,7 @@ from matplotlib.backends.backend_qt5agg import  FigureCanvasQTAgg as FigureCanva
 from matplotlib.figure import Figure
 import numpy as np
 from numpy.distutils.system_info import lapack_atlas_3_10_info
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5.QtWidgets import QApplication,QDialog,QMainWindow,QWidget,QTableWidget,QTableWidgetItem
 from PyQt5.uic import loadUi
 
@@ -21,7 +21,7 @@ from ExcelReader import ExcelReader as E
 import  math as ma
 class GUI(QDialog):
     excelReader = E()
-
+    checked=False
     def __init__(self):
         super(GUI,self).__init__()
         loadUi('finalGUI.ui',self)
@@ -29,7 +29,7 @@ class GUI(QDialog):
         self.setFixedSize(self.size())
         self.tableOfItems.setRowCount(self.excelReader.get_Ncols());
         self.tableOfItems.setColumnCount(self.excelReader.get_Nrows()-1);
-
+       # self.result.alignment(Qt.AlignCenter)
         i=0
         for i in range(len(self.excelReader.get_Xlist())):
             #self.tableOfItems.setItem.setFlags( QtCore.Qt.ItemIsSelectable |  QtCore.Qt.ItemIsEnabled )
@@ -62,7 +62,57 @@ class GUI(QDialog):
         self.boxPlot_2_btn.clicked.connect(self.Draw_YBoxplot)
         self.boxPlot_1_btn.clicked.connect(self.Draw_XBoxplot)
         self.btn_clear.clicked.connect(self.Cleartext)
+        self.pieChart_1_btn.clicked.connect(self.Draw_XpieChart)
+        self.pieChart_2_btn.clicked.connect(self.Draw_YpieChart)
+        self.expectedValue_btn.clicked.connect(self.ExpectedValue)
+        self.Scatterplot_btn.clicked.connect(self.Draw_Scatterplot)
 
+
+    def Arraycolors(self):
+        colors = []
+        for name, hex in matplotlib.colors.cnames.items():
+            colors.append(hex)
+        return colors
+
+    def Draw_YpieChart(self):
+        Labels = []
+        for value in self.excelReader.get_Ylist():
+            Labels.append(str(value))
+        index=0
+        Colors=[]
+        for index in range(len(self.excelReader.get_Ylist())):
+            Colors.append(self.Arraycolors()[index])
+            index+=1
+        if self.checked:
+            pt.close()
+        pt.figure("Pie chart")
+        pt.pie(self.excelReader.get_Ylist(),labels=Labels,colors=Colors)
+        pt.show()
+        self.checked=True
+
+
+    def Draw_XpieChart(self):
+        Labels = []
+        for value in self.excelReader.get_Xlist():
+            Labels.append(str(value))
+        index=0
+        Colors=[]
+        for index in range(len(self.excelReader.get_Xlist())):
+            Colors.append(self.Arraycolors()[index])
+            index+=1
+        if self.checked:
+            pt.close()
+
+        pt.figure("Pie chart")
+        pt.pie(self.excelReader.get_Xlist(),labels=Labels,colors=Colors)
+        pt.show()
+        self.checked=True
+
+
+
+    def ExpectedValue(self):
+        print()
+        #Yhat!!!!!!!!!!
 
     def Cleartext(self):
         self.result.setPlaceholderText("")
@@ -77,13 +127,13 @@ class GUI(QDialog):
             self.result.setPlaceholderText("The correlation Coefficient is :("+str(R)+")\n"+"This mean Weak relationship")
         elif Rvalue>=0.4 and Rvalue<=0.6:
             self.result.setPlaceholderText(
-                "The correlation Coefficient is :(" + str(R) + ") " + "This mean Moderate relationship")
+                "The correlation Coefficient is :(" + str(R) + ") \n" + "This mean Moderate relationship")
         elif Rvalue>=0.7 and Rvalue<=0.9:
             self.result.setPlaceholderText(
-                "The correlation Coefficient is :(" + str(R) + ")  " + "This mean Strong relationship")
+                "The correlation Coefficient is :(" + str(R) + ") \n " + "This mean Strong relationship")
         else:
             self.result.setPlaceholderText(
-                "The correlation Coefficient is :(" + str(R) + ")  " + "This mean Perfect relationship")
+                "The correlation Coefficient is :(" + str(R) + ")  \n" + "This mean Perfect relationship")
 
 
 
@@ -92,22 +142,22 @@ class GUI(QDialog):
 
     def calcX_SD(self):
         sd = (st.stdev(self.excelReader.get_Xlist()))
-        self.result.setPlaceholderText(str(sd))
+        self.result.setPlaceholderText("The Standard Deviation is: "+str(sd))
 
     def calcY_SD(self):
         sd = (st.stdev(self.excelReader.get_Ylist()))
-        self.result.setPlaceholderText(str(sd))
+        self.result.setPlaceholderText("The Standard Deviation is: "+str(sd))
     def calcX_variance(self):
         var = (st.variance(self.excelReader.get_Xlist()))
-        self.result.setPlaceholderText(str(var))
+        self.result.setPlaceholderText("The Variance is: "+str(var))
 
     def calcY_variance(self):
         var = (st.variance(self.excelReader.get_Ylist()))
-        self.result.setPlaceholderText(str(var))
+        self.result.setPlaceholderText("The Variance is: "+str(var))
 
-    def set_table(self):
-        sd = (st.stdev(self.excelReader.get_Xlist()))
-        self.result.setPlaceholderText(str(sd))
+    #def set_table(self):
+        #sd = (st.stdev(self.excelReader.get_Xlist()))
+        #self.result.setPlaceholderText(str(sd))
 
 
     def calcX_zscore(self):
@@ -124,7 +174,7 @@ class GUI(QDialog):
                     print(sd)
                     z_score = (valuex - meanx) / sd
                     print(z_score)
-                    self.result.setPlaceholderText(str(z_score))
+                    self.result.setPlaceholderText("The Z_Score is: "+str(z_score))
                     p = 1
                     break
             if p == 0:
@@ -147,11 +197,11 @@ class GUI(QDialog):
                     print(sd)
                     z_score = (valuey - meany) / sd
                     print(z_score)
-                    self.result.setPlaceholderText(str(z_score))
+                    self.result.setPlaceholderText("The Z_Score is: "+str(z_score))
                     p = 1
                     break
             if p == 0:
-                self.result.setPlaceholderText("value not in list")
+                self.result.setPlaceholderText("value not in list !!!")
         except Exception:
             self.result.setPlaceholderText("Please Enter value must in list")
         p=0
@@ -159,38 +209,43 @@ class GUI(QDialog):
     def calcYmode(self):
         try:
             mode = str(st.mode(self.excelReader.get_Ylist()))
-            self.result.setPlaceholderText(mode)
+            self.result.setPlaceholderText("The Mode is: "+mode)
         except Exception:
-            self.result.setPlaceholderText("no mode")
+            self.result.setPlaceholderText("No Mode in your List !")
 
     def calcXmode(self):
         try:
             mode = str(st.mode(self.excelReader.get_Xlist()))
-            self.result.setPlaceholderText(mode)
+            self.result.setPlaceholderText("The Mode is: "+mode)
         except Exception:
-            self.result.setPlaceholderText("no mode")
+            self.result.setPlaceholderText("No Mode in your List !")
 
     def calcXmedian(self):
         median = str(st.median(self.excelReader.get_Xlist()))
-        self.result.setPlaceholderText(median)
+        self.result.setPlaceholderText("The Median is: "+median)
 
     def calcYmedian(self):
         median = str(st.median(self.excelReader.get_Ylist()))
-        self.result.setPlaceholderText(median) #median2Output
+        self.result.setPlaceholderText("The Median is: "+median) #median2Output
 
     def calcXmean(self):
         mean = str(st.mean(self.excelReader.get_Xlist()))
-        self.result.setPlaceholderText(mean)
+        self.result.setPlaceholderText("The Mean is: "+mean)
 
     def calcYmean(self):
         mean = str(st.mean(self.excelReader.get_Ylist()))
-        self.result.setPlaceholderText(mean)
+        self.result.setPlaceholderText("The Mean is: "+mean)
 
 
 
     def Draw_Bar_Chart(self):
+        if self.checked:
+            pt.close()
+
+        pt.figure("Bar chart")
         pt.bar(self.excelReader.get_Xlist(), self.excelReader.get_Ylist())
         pt.show()
+        self.checked=True
 
 
     def Draw_XHistogram(self):
@@ -210,14 +265,19 @@ class GUI(QDialog):
         length = int(range / no) + 1
         A = []
         w = 0
-        print("listx:..........")
+
         while w < len(self.excelReader.get_Xlist()):
             A.append(w)
             print(w)
             w += length
 
+        if self.checked:
+            pt.close()
+
+        pt.figure("Histogram")
         pt.hist(self.excelReader.get_Xlist(), bins=A)
         pt.show()
+        self.checked=True
 
 
     def Draw_YHistogram(self):
@@ -234,26 +294,45 @@ class GUI(QDialog):
         length = int(range / no) + 1
         A = []
         w = 0
-        print("listy:..........")
+
         while w < len(self.excelReader.get_Ylist()):
             A.append(w)
             w += length
+        if self.checked:
+            pt.close()
+
+        pt.figure("Histogram")
         pt.hist(self.excelReader.get_Ylist(), bins=A)
         pt.show()
+        self.checked=True
 
     def Draw_XBoxplot(self):
+        if self.checked:
+            pt.close()
+
+        pt.figure("Box Plot")
         pt.boxplot(self.excelReader.get_Xlist())
         pt.show()
-
+        self.checked = True
 
     def Draw_YBoxplot(self):
+        if self.checked:
+            pt.close()
+
+        pt.figure("Box Plot")
         pt.boxplot(self.excelReader.get_Ylist())
         pt.show()
+        self.checked = True
 
 
     def Draw_Scatterplot(self):
+        if self.checked:
+            pt.close()
+
+        pt.figure("Scatter Plot")
         pt.scatter(self.excelReader.get_Xlist(), self.excelReader.get_Ylist())
         pt.show()
+        self.checked = True
 
 
 
